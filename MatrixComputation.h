@@ -6,20 +6,20 @@
 #define LAB3_MATRIXCOMPUTATION_H
 
 
-const int column = 2;
-
 class MatrixComputation {
 
 public:
     MatrixComputation();
     void interaction();
-    int exit_condition(int x);
-    void print();
-    char& readFile(std::string filename, char arr[], int n);
-    int writeToFile(std::string filename, char arr[], int n);
-    void threadCreation(int x); // thread creation
+    static int exit_condition(char* result, int x);
+    int& getLocation(int x);
+    static int getLinearIdx(int row, int column);
+    static char& readFile(std::string filename, char arr[], int n);
+    static int writeToFile(std::string filename, char arr[], int n);
+    int threadCreation(int x); // thread creation
     static void * computation(void* args);
-    void display(int matrix[][column], int x);
+    static void * isDone(void* args);
+    static void display(char* resultat);
 };
 
 

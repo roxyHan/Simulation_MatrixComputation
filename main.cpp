@@ -3,7 +3,7 @@
 #include "MatrixComputation.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    srand(time(0));
     MatrixComputation* matrix = new MatrixComputation();
     matrix->interaction();
     return 0;
