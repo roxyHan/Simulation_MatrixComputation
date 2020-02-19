@@ -5,10 +5,34 @@
 using namespace std;
 
 #include <iostream>
+#include <fstream>
 #include "MatrixComputation.h"
 
 
 MatrixComputation::MatrixComputation() {}
+
+
+char& MatrixComputation::readFile(std::string filename, char *arr, int n) {
+    //read from file
+    std::ifstream isObj(filename, std::ios::in| std::ios::binary);
+    isObj.read(arr, n);
+    if (!isObj) {
+        std::cout << "Failed to open file" <<std::endl;
+    }
+    for (int i = 0; i < n; ++i) {
+        std::cout << arr[i] << " is the element at position " << i << std::endl;
+    }
+    isObj.close();
+    return *arr;
+}
+
+
+int MatrixComputation::writeToFile(string filename, char* num, int n) {
+    // Write to file
+    std::ofstream osObj(filename, std::ios::out| std::ios::binary);
+    osObj.write(num, n);
+    osObj.close();
+}
 
 
 void MatrixComputation::interaction() {
@@ -21,14 +45,21 @@ void MatrixComputation::interaction() {
     int n = stoi(elementsCount);
     int M = stoi(threadsCount);
     // Create square matrix
-    int matrix[M][M];
+    int matrix[n][n];
 
-    // Populate matrix with random values
-    for (int i = 0; i < M; ++i) {
-        for (int j = 0; j < M; ++j) {
-            matrix[i][j] = rand() % 10;
-        }
+    string filename;
+    // Ask the user for the name of the file
+    cout << "Please enter the name of the file: " << endl;
+    getline(cin, filename);
+    int totalLength = n*n;
+    char* nums = new char [totalLength];
+    // Populate the file with random values
+    for (int i = 0; i < (n*n); ++i) {
+        nums[i] = '0' + (rand() % 2);
     }
+    writeToFile(filename, nums, totalLength);
+    char* result;
+    readFile(filename, result, totalLength);
 
     // Create M threads
     threadCreation(M);
@@ -41,7 +72,8 @@ void MatrixComputation::interaction() {
 
 void* MatrixComputation::computation(void *args) {
     cout << "###It's working for " << endl;
-
+    // generate random row number
+    // generate random column number
     return (0) ;
 }
 
@@ -70,4 +102,14 @@ void MatrixComputation::display(int matrix[][column],int x){
         }
         cout << endl;
     }
+}
+
+int MatrixComputation::exit_condition(int x) {
+    // Check that all elements are either 0 or 1
+
+
+}
+
+void MatrixComputation::print() {
+    //readFile();
 }
