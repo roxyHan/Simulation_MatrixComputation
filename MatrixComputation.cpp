@@ -11,6 +11,7 @@ using namespace std;
 #include "MatrixComputation.h"
 
 pthread_mutex_t lock;
+pthread_mutex_t lock2;
 int n;
 string filename;
 int totalLength;
@@ -23,11 +24,8 @@ char& MatrixComputation::readFile(std::string filename, char *arr, int n) {
     std::ifstream isObj(filename, std::ios::in| std::ios::binary);
     isObj.read(arr, n);
     if (!isObj) {
-        std::cout << "Failed to open file" <<std::endl;
+        //std::cout << "Failed to open file" <<std::endl;
     }
-    /**for (int i = 0; i < n; ++i) {
-        std::cout << arr[i] << " is the element at position " << i << std::endl;
-    }*/
     isObj.close();
     return *arr;
 }
@@ -83,7 +81,7 @@ void* MatrixComputation::computation(void *args) {
     char* result = new char[totalLength];
     result = &readFile(filename, result, (n*n));
 
-    // Check if half of the neighbor are 0 or 1
+    // Check if half of the neighbors are 0 or 1
 //*****************************************************************************
     int count = 0;
     int neighbors = 0;
@@ -169,18 +167,34 @@ void* MatrixComputation::computation(void *args) {
     cout << "Modified element from " << temp << " to " << (result[idx] - '0') << "\n"
          << endl;
     writeToFile(filename, result, totalLength);
+    //
     pthread_mutex_unlock(&lock);
-    return (0) ;
+    // After updating the info by writing the matrix to the file, check with another
+    // thread if the exit condition is met (the values of the matrix are all 0 or 1)
+
+    // Create manager thread to check if the exit condition is met
+    int*c;
+    pthread_t threadManager;
+    if (pthread_mutex_init(&lock2, NULL) != 0) {
+        printf("\n mutex2 init has failed\n");
+        exit(1);
+    }
+    int isMet = pthread_create(&threadManager, 0, isDone, (void*)c);
+    if (isMet != 0) {
+        exit(11);
+    }
+    pthread_mutex_destroy(&lock2);
 }
 
 void* MatrixComputation::isDone(void *args) {
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock2);
     char* result = new char[totalLength];
     result = &readFile(filename, result, totalLength);
     if (exit_condition(result, 1) || exit_condition(result, 0)){
+        cout << "The matrix is solved ==> all elements are either 0 or 1!" << endl;
         exit(10);
     }
-    pthread_mutex_destroy(&lock);
+    pthread_mutex_unlock(&lock2);
 }
 
 
@@ -197,12 +211,6 @@ int MatrixComputation::threadCreation(int x) {
         int * p;
         pthread_create(&threads[i], 0, computation, (void*)p);
     }
-
-    /*// Create manager thread to check if the exit condition is met
-    int*c;
-    pthread_t threadManager;
-    pthread_create(&threadManager, 0, isDone, (void*)c);
-*/
     //  Allow the threads to be done
     for (int j = 0; j < x; ++j) {
         pthread_join(threads[j], 0);
@@ -214,6 +222,7 @@ int MatrixComputation::threadCreation(int x) {
 
 void MatrixComputation::display(char* arr){
     // Display matrix
+    pthread_mutex_lock(&lock2);
     cout << endl;
     for (int i = 0; i < totalLength; ++i) {
         if ((i+1) % n == 0) {
@@ -224,12 +233,13 @@ void MatrixComputation::display(char* arr){
         }
     }
     cout << endl;
+    pthread_mutex_unlock(&lock2);
 }
 
 int MatrixComputation::exit_condition(char* result, int x) {
     // Check that all elements are either 0 or 1
     for (int i = 0; i < totalLength; ++i) {
-        if (result[i] != (x+'0')) {
+        if (result[i] != (x +'0')) {
             return false;
         }
     }
